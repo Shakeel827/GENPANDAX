@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import * as THREE from 'three';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -28,10 +28,616 @@ function resumeAudio() { audioCtx?.resume(); }
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const SUPPORT_EMAIL = 'support@pandascanpros.in';
 const BUSINESS_EMAIL = 'business@pandascanpros.in';
-const CONNECT_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSc-erIeSo8JJYRnlxlb3G5_0M8EWHZnTPLrPyhF6U_XvW3Czw/viewform?usp=header';
-const CAREER_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScQTWir8AUifF8NB2LF8hBKyJK3lnJ-oTiB-YuEIR25shFOXA/viewform?usp=header';
 const LINKEDIN_URL = 'https://www.linkedin.com/company/shakeelpandarise/';
 const INSTAGRAM_URL = 'https://www.instagram.com/genpandax_?igsh=MTBxZnV3Z25tandlZA==';
+const FORM_PROJECT = 'xdapebda';
+const FORM_CAREER  = 'xreopjkn';
+
+// ─── SERVICE DETAIL DATA ──────────────────────────────────────────────────────
+const SERVICE_DETAILS = [
+  {
+    num: '01', title: 'Web Development', color: '#00ffcc',
+    tagline: 'Blazing-fast, conversion-optimised websites',
+    overview: 'We engineer custom web experiences from the ground up — no templates, no shortcuts. Every pixel is intentional, every interaction is smooth, and every page loads in under a second. Companies with high-performing websites generate significantly more inbound leads and recover their full investment within 12–18 months.',
+    problems: [
+      { icon: '🐌', title: 'Slow Load Times', desc: '53% of visitors abandon a site that takes over 3 seconds to load. Every 0.1s delay costs you 8.4% in conversions.' },
+      { icon: '📉', title: 'Low Conversions', desc: 'Template sites convert at 1–2%. Custom-built experiences with clear CTAs and fast UX convert at 5–12%.' },
+      { icon: '📱', title: 'Not Mobile-Ready', desc: '60%+ of traffic is mobile. A non-responsive site loses more than half your audience before they even read a word.' },
+      { icon: '🔍', title: 'Invisible on Google', desc: 'Without technical SEO baked in from day one, your site won\'t rank — no matter how good it looks.' },
+    ],
+    solutions: [
+      { title: 'React / Next.js Architecture', desc: 'Server-side rendering, static generation, and edge caching for sub-second load times globally.' },
+      { title: 'Conversion-First Design', desc: 'Every layout decision is driven by user psychology — where eyes go, what drives clicks, what builds trust.' },
+      { title: 'Mobile-First Development', desc: 'Built for phones first, then scaled up. Fluid layouts, touch-optimised interactions, fast on 4G.' },
+      { title: 'SEO-Ready from Day 1', desc: 'Semantic HTML, structured data, meta strategy, and Core Web Vitals baked into every build.' },
+    ],
+    metrics: [
+      { label: 'Avg Load Time', value: '0.8s', sub: 'vs 3.2s industry avg' },
+      { label: 'Lighthouse Score', value: '98/100', sub: 'Performance' },
+      { label: 'Conversion Lift', value: '+340%', sub: 'vs old site' },
+      { label: 'Bounce Rate Drop', value: '-62%', sub: 'after redesign' },
+    ],
+    dashboard: [
+      { label: 'Page Speed', value: 98, unit: '/100', color: '#00ffcc' },
+      { label: 'SEO Score', value: 96, unit: '/100', color: '#7c3aed' },
+      { label: 'Accessibility', value: 94, unit: '/100', color: '#00ffcc' },
+      { label: 'Best Practices', value: 100, unit: '/100', color: '#7c3aed' },
+    ],
+    tools: ['React', 'Next.js', 'TypeScript', 'Tailwind CSS', 'Node.js', 'PostgreSQL', 'Vercel', 'Cloudflare'],
+    timeline: [
+      { week: 'Week 1–2', task: 'Discovery, wireframes & tech planning' },
+      { week: 'Week 3–5', task: 'UI design & component development' },
+      { week: 'Week 6–7', task: 'Integration, testing & performance tuning' },
+      { week: 'Week 8', task: 'Launch, monitoring & handover' },
+    ],
+    process: [
+      { step: '01', title: 'Discovery', desc: 'Deep-dive into your business goals, audience, and competitors. We map user journeys before writing a single line of code.' },
+      { step: '02', title: 'Architecture', desc: 'Plan tech stack, routing, CMS, and performance strategy. We choose tools that scale with your business.' },
+      { step: '03', title: 'Design & Build', desc: 'Pixel-perfect UI built in React/Next.js with animations, accessibility, and mobile-first responsiveness.' },
+      { step: '04', title: 'Launch & Optimise', desc: 'Deploy to edge CDN, monitor real user metrics, and iterate based on data — not guesses.' },
+    ],
+    caseStudy: {
+      client: 'E-Commerce Brand',
+      challenge: 'Their Shopify template was slow (4.2s load), had a 78% bounce rate, and converted at 0.9%.',
+      result: 'Rebuilt as a custom Next.js app with optimised checkout flow and product pages. Revenue increased 3.4× in 90 days.',
+      stats: [{ k: 'Revenue Growth', v: '340%' }, { k: 'Page Speed', v: '0.6s' }, { k: 'Conversion Rate', v: '4.8%' }, { k: 'Bounce Rate', v: '-62%' }],
+    },
+    faqs: [
+      { q: 'How long does a website take?', a: 'A standard business site takes 4–6 weeks. Complex web apps take 8–16 weeks depending on features.' },
+      { q: 'Do you work with existing brands?', a: 'Yes. We can work within your existing brand guidelines or help you evolve them.' },
+      { q: 'Will I be able to update content myself?', a: 'Absolutely. We integrate headless CMS options like Sanity or Contentful so your team can update without touching code.' },
+    ],
+    tags: ['React', 'Next.js', 'TypeScript', 'Node.js'],
+  },
+  {
+    num: '02', title: 'Business Systems', color: '#7c3aed',
+    tagline: 'Intelligent systems that run your operations',
+    overview: 'From CRM to inventory to analytics dashboards — we build the internal tools that give your team superpowers. Businesses earn an average of $8.71 for every $1 spent on CRM, and companies using automation save 5–10 hours per week per employee. We build systems that pay for themselves.',
+    problems: [
+      { icon: '📊', title: 'Data Scattered Everywhere', desc: 'Your team uses 6 different tools that don\'t talk to each other. Decisions are made on gut feel, not data.' },
+      { icon: '🔁', title: 'Manual Repetitive Work', desc: 'Hours wasted on copy-pasting, manual reports, and chasing updates. Automation can reclaim 18+ hours/week.' },
+      { icon: '📦', title: 'Inventory Chaos', desc: 'Overselling, stockouts, and no real-time visibility. Every mistake costs money and customer trust.' },
+      { icon: '👥', title: 'No Customer Intelligence', desc: 'You don\'t know who your best customers are, when they\'re likely to churn, or what they actually want.' },
+    ],
+    solutions: [
+      { title: 'Unified CRM Dashboard', desc: 'One place for all customer data — interactions, deals, support tickets, and revenue history. 29% avg revenue increase after CRM adoption.' },
+      { title: 'Workflow Automation', desc: 'Automate follow-ups, invoicing, inventory alerts, and reporting. AI-powered CRM tools cut 2 hours of manual work per day per rep.' },
+      { title: 'Real-Time Analytics', desc: 'Live dashboards showing revenue, pipeline, inventory levels, and team performance. Make decisions in seconds, not days.' },
+      { title: 'System Integrations', desc: 'Connect everything — WhatsApp, Slack, Google Sheets, Razorpay, Shiprocket, Tally — into one intelligent hub.' },
+    ],
+    metrics: [
+      { label: 'Time Saved', value: '18hrs/wk', sub: 'per team member' },
+      { label: 'CRM ROI', value: '$8.71', sub: 'per $1 invested' },
+      { label: 'Revenue Lift', value: '+29%', sub: 'avg after CRM' },
+      { label: 'Error Reduction', value: '-94%', sub: 'vs manual process' },
+    ],
+    dashboard: [
+      { label: 'Revenue Growth', value: 87, unit: '%', color: '#7c3aed' },
+      { label: 'Automation Rate', value: 94, unit: '%', color: '#00ffcc' },
+      { label: 'Data Accuracy', value: 99, unit: '%', color: '#7c3aed' },
+      { label: 'Team Efficiency', value: 78, unit: '%', color: '#00ffcc' },
+    ],
+    tools: ['React', 'Node.js', 'PostgreSQL', 'Redis', 'Razorpay', 'WhatsApp API', 'Google Sheets API', 'AWS'],
+    timeline: [
+      { week: 'Week 1', task: 'Workflow audit & requirements mapping' },
+      { week: 'Week 2–3', task: 'Database design & API architecture' },
+      { week: 'Week 4–6', task: 'Dashboard build & integrations' },
+      { week: 'Week 7–8', task: 'Testing, training & go-live' },
+    ],
+    process: [
+      { step: '01', title: 'Workflow Audit', desc: 'We map every process your team does manually. We find the bottlenecks, the duplications, and the money leaks.' },
+      { step: '02', title: 'System Design', desc: 'Design data models, APIs, and automation logic. We architect for scale — not just today\'s needs.' },
+      { step: '03', title: 'Build & Integrate', desc: 'Connect with your existing tools — Slack, Sheets, WhatsApp, payment gateways, and logistics APIs.' },
+      { step: '04', title: 'Train & Scale', desc: 'Onboard your team with documentation and training. Then scale features as your business grows.' },
+    ],
+    caseStudy: {
+      client: 'Logistics Company (50 employees)',
+      challenge: 'Managing 200+ daily shipments across 4 spreadsheets. 3 hours/day lost to manual status updates and customer calls.',
+      result: 'Built a real-time operations dashboard with automated WhatsApp notifications. Team saves 18 hours/week. Customer complaints dropped 71%.',
+      stats: [{ k: 'Hours Saved/Wk', v: '18hrs' }, { k: 'ROI', v: '8.2×' }, { k: 'Complaints', v: '-71%' }, { k: 'Payback Period', v: '6 weeks' }],
+    },
+    faqs: [
+      { q: 'Can you integrate with our existing software?', a: 'Yes. We integrate with Tally, Zoho, Razorpay, Shiprocket, WhatsApp Business, Google Workspace, and most REST APIs.' },
+      { q: 'Is our data secure?', a: 'All systems are built with role-based access control, encrypted storage, and regular automated backups.' },
+      { q: 'What if our needs change?', a: 'We build modular systems. Adding new features or workflows is straightforward — no rebuilding from scratch.' },
+    ],
+    tags: ['CRM', 'Analytics', 'Automation', 'Cloud'],
+  },
+  {
+    num: '03', title: 'UI/UX Design', color: '#00ffcc',
+    tagline: 'Interfaces that convert visitors into customers',
+    overview: 'Great design is invisible — users just feel it. Every $1 invested in UX returns up to $100 in revenue (Forrester Research). A well-executed UI can boost conversion rates by 200%, while superior UX can push that to 400%. We design experiences that guide users naturally toward action.',
+    problems: [
+      { icon: '😤', title: 'Users Get Confused', desc: '86% of consumers abandon a brand after just two bad experiences. Confusing navigation is the #1 reason.' },
+      { icon: '🛒', title: 'Cart Abandonment', desc: '44% of shoppers abandon purchases because the site is hard to navigate or unattractive. Design is revenue.' },
+      { icon: '📞', title: 'Too Many Support Tickets', desc: 'Poor UX generates 3× more support requests. Better design means fewer questions and lower support costs.' },
+      { icon: '🎨', title: 'Inconsistent Brand', desc: 'No design system means every page looks different. Users lose trust when the experience feels disjointed.' },
+    ],
+    solutions: [
+      { title: 'User Research & Testing', desc: 'We interview real users, run heatmap analysis, and conduct usability tests before designing a single screen.' },
+      { title: 'Conversion-Optimised Flows', desc: 'Every user journey is mapped and optimised — from landing to checkout, signup to activation.' },
+      { title: 'Design System Creation', desc: 'A complete component library that keeps your product consistent, speeds up development, and scales with your team.' },
+      { title: 'Motion & Micro-interactions', desc: 'Subtle animations that guide attention, confirm actions, and make your product feel premium and alive.' },
+    ],
+    metrics: [
+      { label: 'UX ROI', value: '$100', sub: 'per $1 invested (Forrester)' },
+      { label: 'Conversion Lift', value: '+400%', sub: 'superior UX impact' },
+      { label: 'Support Tickets', value: '-71%', sub: 'clearer UX' },
+      { label: 'User Retention', value: '+210%', sub: 'after redesign' },
+    ],
+    dashboard: [
+      { label: 'Task Completion', value: 94, unit: '%', color: '#00ffcc' },
+      { label: 'User Satisfaction', value: 91, unit: '%', color: '#7c3aed' },
+      { label: 'Conversion Rate', value: 76, unit: '%↑', color: '#00ffcc' },
+      { label: 'Error Rate Drop', value: 88, unit: '%', color: '#7c3aed' },
+    ],
+    tools: ['Figma', 'FigJam', 'Framer', 'Lottie', 'Hotjar', 'Maze', 'Storybook', 'Zeroheight'],
+    timeline: [
+      { week: 'Week 1', task: 'User research, interviews & competitor audit' },
+      { week: 'Week 2', task: 'Information architecture & wireframes' },
+      { week: 'Week 3–4', task: 'High-fidelity designs & design system' },
+      { week: 'Week 5', task: 'Prototype testing, iteration & dev handoff' },
+    ],
+    process: [
+      { step: '01', title: 'Research', desc: 'User interviews, heatmaps, session recordings, and competitor analysis. We design from evidence, not assumptions.' },
+      { step: '02', title: 'Wireframes', desc: 'Low-fidelity flows to validate structure and user journeys before investing in visual design.' },
+      { step: '03', title: 'High-Fidelity Design', desc: 'Full Figma designs with motion specs, design tokens, and a complete component library.' },
+      { step: '04', title: 'Handoff & QA', desc: 'Developer handoff with annotated specs, assets, and a pixel-perfect implementation review.' },
+    ],
+    caseStudy: {
+      client: 'SaaS Startup (B2B)',
+      challenge: 'Onboarding took 14 steps. 73% of trial users dropped off before completing setup. Support was overwhelmed.',
+      result: 'Redesigned onboarding to 5 steps with contextual tooltips and progress indicators. Trial-to-paid conversion jumped from 8% to 31%.',
+      stats: [{ k: 'Conversion', v: '8%→31%' }, { k: 'Onboarding Steps', v: '14→5' }, { k: 'Support Tickets', v: '-71%' }, { k: 'NPS Score', v: '+67' }],
+    },
+    faqs: [
+      { q: 'Do you do design only, or development too?', a: 'Both. We can deliver Figma files for your dev team, or handle the full design-to-code pipeline ourselves.' },
+      { q: 'How do you measure design success?', a: 'We set KPIs before we start — conversion rate, task completion, NPS — and measure against them post-launch.' },
+      { q: 'Can you redesign an existing product?', a: 'Yes. We do full redesigns, partial UX improvements, and design system creation for existing products.' },
+    ],
+    tags: ['Figma', 'Motion', 'Prototyping', 'Design Systems'],
+  },
+  {
+    num: '04', title: 'Performance & SEO', color: '#7c3aed',
+    tagline: 'Rank higher, load faster, earn more',
+    overview: 'Speed is a feature. SEO delivers an average ROI of 22:1 — significantly outperforming paid ads (2:1). Organic search drives 53% of all website traffic and 43% of e-commerce revenue. The top organic result captures 28% of all clicks. Page 2 gets 0.67%. We get you to page 1.',
+    problems: [
+      { icon: '🐢', title: 'Site is Too Slow', desc: 'A 1-second delay reduces conversions by 7%. 53% of mobile users leave if a page takes over 3 seconds. Speed = money.' },
+      { icon: '👻', title: 'Invisible on Google', desc: 'Only 0.67% of users click to page 2. If you\'re not in the top 3 results, you\'re essentially invisible to your customers.' },
+      { icon: '🔧', title: 'Technical SEO Debt', desc: 'Broken links, missing schema, duplicate content, slow Core Web Vitals — these silently kill your rankings every day.' },
+      { icon: '💸', title: 'Over-Relying on Paid Ads', desc: 'Paid ads stop the moment you stop paying. SEO compounds over time — businesses report 700% ROI over 3 years.' },
+    ],
+    solutions: [
+      { title: 'Core Web Vitals Optimisation', desc: 'LCP under 2.5s, FID under 100ms, CLS under 0.1. We make your site pass Google\'s performance benchmarks.' },
+      { title: 'Technical SEO Audit & Fix', desc: 'Full crawl of your site — fixing indexing issues, broken links, duplicate content, and schema markup.' },
+      { title: 'Keyword & Content Strategy', desc: 'Research high-intent keywords your customers actually search. Build content that ranks and converts.' },
+      { title: 'Monthly Reporting', desc: 'Transparent monthly reports showing rankings, traffic, conversions, and revenue attributed to organic search.' },
+    ],
+    metrics: [
+      { label: 'SEO ROI', value: '22:1', sub: 'avg return (vs 2:1 paid)' },
+      { label: 'Organic Traffic', value: '+520%', sub: 'avg in 6 months' },
+      { label: 'Top Position', value: '28%', sub: 'of all clicks go here' },
+      { label: 'Long-term ROI', value: '700%', sub: 'over 3 years' },
+    ],
+    dashboard: [
+      { label: 'LCP Score', value: 96, unit: '/100', color: '#7c3aed' },
+      { label: 'Keyword Rankings', value: 89, unit: '%↑', color: '#00ffcc' },
+      { label: 'Organic Traffic', value: 82, unit: '%↑', color: '#7c3aed' },
+      { label: 'Page Speed', value: 98, unit: '/100', color: '#00ffcc' },
+    ],
+    tools: ['Google Search Console', 'Ahrefs', 'Screaming Frog', 'PageSpeed Insights', 'Cloudflare', 'Next.js', 'Schema.org', 'GTM'],
+    timeline: [
+      { week: 'Week 1', task: 'Full technical audit & keyword research' },
+      { week: 'Week 2–3', task: 'On-page fixes, speed optimisation & schema' },
+      { week: 'Week 4–6', task: 'Content strategy & link building' },
+      { week: 'Month 2+', task: 'Monthly monitoring, reporting & iteration' },
+    ],
+    process: [
+      { step: '01', title: 'Technical Audit', desc: 'Full site crawl — broken links, slow assets, indexing issues, duplicate content, and Core Web Vitals analysis.' },
+      { step: '02', title: 'Keyword Strategy', desc: 'Research high-intent keywords your customers actually search. Map them to pages and content gaps.' },
+      { step: '03', title: 'On-Page & Speed', desc: 'Optimise meta tags, schema markup, image compression, font loading, and JavaScript bundles.' },
+      { step: '04', title: 'Monitor & Report', desc: 'Monthly reports with rankings, traffic, and revenue attribution. You always know exactly what\'s working.' },
+    ],
+    caseStudy: {
+      client: 'D2C Fashion Brand',
+      challenge: 'Site loaded in 5.8s. Ranking on page 4 for their main keywords. Spending ₹2L/month on Google Ads with poor ROAS.',
+      result: 'Reduced load time to 1.1s, fixed 340 technical SEO issues, and built a content strategy. Organic revenue up ₹40L in 6 months. Ads budget cut by 60%.',
+      stats: [{ k: 'Traffic Growth', v: '+520%' }, { k: 'Keywords #1', v: '12' }, { k: 'Organic Revenue', v: '+₹40L' }, { k: 'Ads Spend Cut', v: '-60%' }],
+    },
+    faqs: [
+      { q: 'How long before we see SEO results?', a: 'Technical fixes show impact in 4–8 weeks. Keyword rankings typically improve significantly in 3–6 months. SEO compounds over time.' },
+      { q: 'Do you guarantee rankings?', a: 'No one can guarantee specific rankings — Google\'s algorithm changes. We guarantee transparent work, measurable traffic growth, and honest reporting.' },
+      { q: 'Can you work on a site built by someone else?', a: 'Yes. We audit and optimise any site regardless of who built it — WordPress, Shopify, custom code, or anything else.' },
+    ],
+    tags: ['Core Web Vitals', 'SEO', 'CDN', 'Optimization'],
+  },
+];
+
+// ─── SERVICE DETAIL OVERLAY ───────────────────────────────────────────────────
+function ServiceDetail({ service, onClose }: { service: typeof SERVICE_DETAILS[0]; onClose: () => void }) {
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  const fadeUp = (delay = 0) => ({
+    initial: { opacity: 0, y: 32 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as any },
+  });
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="fixed inset-0 z-[9990] bg-black overflow-y-auto"
+    >
+      {/* Sticky top bar */}
+      <div className="sticky top-0 z-10 bg-black/90 backdrop-blur-xl border-b border-white/5 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <span className="text-xs font-mono text-white/30 tracking-widest">{service.num}</span>
+          <span className="w-px h-4 bg-white/10" />
+          <span className="text-white font-black text-sm tracking-[0.1em]">{service.title}</span>
+        </div>
+        <button onClick={onClose}
+          className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center hover:border-white/40 hover:bg-white/5 transition-all duration-300">
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+            <path d="M1 1L13 13M13 1L1 13" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-6 py-16 space-y-24">
+
+        {/* ── HERO ── */}
+        <motion.div {...fadeUp(0)}>
+          <div className="text-xs font-mono tracking-[0.4em] uppercase mb-4 opacity-60" style={{ color: service.color }}>Service Overview</div>
+          <h1 className="text-5xl sm:text-7xl font-black text-white leading-none mb-5">{service.title}</h1>
+          <p className="text-xl text-white/40 mb-6 font-light italic">{service.tagline}</p>
+          <p className="text-white/70 text-lg leading-relaxed max-w-3xl">{service.overview}</p>
+        </motion.div>
+
+        {/* ── IMPACT METRICS DASHBOARD ── */}
+        <motion.div {...fadeUp(0.05)}>
+          <div className="text-xs font-mono tracking-[0.4em] uppercase mb-8 opacity-60" style={{ color: service.color }}>Impact Dashboard</div>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {service.metrics.map((m, i) => (
+              <motion.div key={i} {...fadeUp(0.05 * i)}
+                className="p-6 border border-white/10 rounded-2xl bg-white/[0.02] hover:bg-white/[0.04] transition-colors duration-300 group">
+                <div className="text-3xl font-black mb-1 group-hover:scale-105 transition-transform duration-300" style={{ color: service.color }}>{m.value}</div>
+                <div className="text-white text-sm font-semibold mb-1">{m.label}</div>
+                <div className="text-white/40 text-xs">{m.sub}</div>
+              </motion.div>
+            ))}
+          </div>
+          {/* Progress bars dashboard */}
+          <div className="grid sm:grid-cols-2 gap-4">
+            {service.dashboard.map((d, i) => (
+              <motion.div key={i} {...fadeUp(0.08 * i)}
+                className="p-5 border border-white/10 rounded-xl bg-white/[0.02]">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-white/70 text-sm font-medium">{d.label}</span>
+                  <span className="font-black text-sm" style={{ color: d.color }}>{d.value}{d.unit}</span>
+                </div>
+                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${d.value}%` }}
+                    transition={{ duration: 1.2, delay: 0.3 + i * 0.1, ease: 'easeOut' }}
+                    className="h-full rounded-full"
+                    style={{ background: `linear-gradient(90deg, ${d.color}, ${d.color}88)` }}
+                  />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── PROBLEMS WE SOLVE ── */}
+        <motion.div {...fadeUp(0.05)}>
+          <div className="text-xs font-mono tracking-[0.4em] uppercase mb-8 opacity-60" style={{ color: service.color }}>Problems We Solve</div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {service.problems.map((p, i) => (
+              <motion.div key={i} {...fadeUp(0.07 * i)}
+                className="p-6 border border-white/10 rounded-2xl hover:border-white/20 hover:bg-white/[0.02] transition-all duration-300">
+                <div className="text-2xl mb-3">{p.icon}</div>
+                <div className="text-white font-black text-base mb-2">{p.title}</div>
+                <div className="text-white/50 text-sm leading-relaxed">{p.desc}</div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── OUR SOLUTIONS ── */}
+        <motion.div {...fadeUp(0.05)}>
+          <div className="text-xs font-mono tracking-[0.4em] uppercase mb-8 opacity-60" style={{ color: service.color }}>How We Solve It</div>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {service.solutions.map((s, i) => (
+              <motion.div key={i} {...fadeUp(0.07 * i)}
+                className="p-6 border border-white/10 rounded-2xl hover:border-white/20 transition-all duration-300 relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1 h-full rounded-l-2xl" style={{ background: service.color }} />
+                <div className="pl-4">
+                  <div className="text-white font-black text-base mb-2">{s.title}</div>
+                  <div className="text-white/50 text-sm leading-relaxed">{s.desc}</div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── PROCESS ── */}
+        <motion.div {...fadeUp(0.05)}>
+          <div className="text-xs font-mono tracking-[0.4em] uppercase mb-8 opacity-60" style={{ color: service.color }}>Our Process</div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {service.process.map((p, i) => (
+              <motion.div key={i} {...fadeUp(0.1 * i)}
+                className="relative p-6 border border-white/10 rounded-2xl hover:bg-white/[0.02] transition-colors duration-300">
+                {i < service.process.length - 1 && (
+                  <div className="hidden lg:block absolute top-8 left-full w-5 h-px bg-white/10 z-10" />
+                )}
+                <div className="text-xs font-mono mb-4 opacity-50" style={{ color: service.color }}>{p.step}</div>
+                <div className="text-white font-black text-base mb-2">{p.title}</div>
+                <div className="text-white/50 text-sm leading-relaxed">{p.desc}</div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── TIMELINE ── */}
+        <motion.div {...fadeUp(0.05)}>
+          <div className="text-xs font-mono tracking-[0.4em] uppercase mb-8 opacity-60" style={{ color: service.color }}>Project Timeline</div>
+          <div className="space-y-3">
+            {service.timeline.map((t, i) => (
+              <motion.div key={i} {...fadeUp(0.07 * i)}
+                className="flex items-center gap-6 p-5 border border-white/10 rounded-xl hover:bg-white/[0.02] transition-colors duration-300">
+                <div className="shrink-0 text-xs font-mono font-bold tracking-wider" style={{ color: service.color }}>{t.week}</div>
+                <div className="w-px h-6 bg-white/10 shrink-0" />
+                <div className="text-white/70 text-sm">{t.task}</div>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── TOOLS ── */}
+        <motion.div {...fadeUp(0.05)}>
+          <div className="text-xs font-mono tracking-[0.4em] uppercase mb-6 opacity-60" style={{ color: service.color }}>Tools & Technologies</div>
+          <div className="flex flex-wrap gap-3">
+            {service.tools.map((tool, i) => (
+              <motion.span key={i} {...fadeUp(0.04 * i)}
+                className="px-4 py-2 border border-white/15 text-white/60 text-sm rounded-full hover:border-white/30 hover:text-white transition-all duration-300">
+                {tool}
+              </motion.span>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── CASE STUDY ── */}
+        <motion.div {...fadeUp(0.05)}
+          className="p-8 sm:p-12 rounded-3xl border border-white/10 relative overflow-hidden"
+          style={{ background: `linear-gradient(135deg, ${service.color}06, transparent 60%)` }}>
+          <div className="absolute top-0 right-0 w-80 h-80 rounded-full blur-3xl pointer-events-none opacity-10" style={{ background: service.color }} />
+          <div className="relative z-10">
+            <div className="text-xs font-mono tracking-[0.4em] uppercase mb-2 opacity-60" style={{ color: service.color }}>Case Study</div>
+            <div className="text-white/30 text-xs font-mono tracking-widest uppercase mb-4">{service.caseStudy.client}</div>
+            <div className="grid sm:grid-cols-2 gap-8 mb-8">
+              <div>
+                <div className="text-white/40 text-xs uppercase tracking-wider mb-2 font-mono">The Challenge</div>
+                <p className="text-white/70 text-sm leading-relaxed">{service.caseStudy.challenge}</p>
+              </div>
+              <div>
+                <div className="text-white/40 text-xs uppercase tracking-wider mb-2 font-mono">The Result</div>
+                <p className="text-white/70 text-sm leading-relaxed">{service.caseStudy.result}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {service.caseStudy.stats.map((s, i) => (
+                <div key={i} className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
+                  <div className="text-2xl font-black mb-1" style={{ color: service.color }}>{s.v}</div>
+                  <div className="text-white/40 text-xs tracking-wider">{s.k}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── FAQ ── */}
+        <motion.div {...fadeUp(0.05)}>
+          <div className="text-xs font-mono tracking-[0.4em] uppercase mb-8 opacity-60" style={{ color: service.color }}>Frequently Asked</div>
+          <div className="space-y-3">
+            {service.faqs.map((f, i) => (
+              <motion.div key={i} {...fadeUp(0.07 * i)}
+                className="border border-white/10 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                  className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-white/[0.02] transition-colors duration-300">
+                  <span className="text-white font-semibold text-sm pr-4">{f.q}</span>
+                  <motion.span animate={{ rotate: openFaq === i ? 45 : 0 }} transition={{ duration: 0.2 }}
+                    className="shrink-0 w-6 h-6 rounded-full border border-white/20 flex items-center justify-center text-white/50 text-lg leading-none">
+                    +
+                  </motion.span>
+                </button>
+                <AnimatePresence>
+                  {openFaq === i && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="overflow-hidden">
+                      <div className="px-6 pb-5 text-white/50 text-sm leading-relaxed border-t border-white/5 pt-4">{f.a}</div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* ── CTA ── */}
+        <motion.div {...fadeUp(0.05)} className="text-center pb-8">
+          <p className="text-white/40 mb-6 text-base">Ready to get started with {service.title}?</p>
+          <button onClick={onClose}
+            className="px-12 py-4 rounded-full font-black text-sm tracking-[0.15em] uppercase text-black transition-all duration-300 hover:scale-105 hover:shadow-2xl"
+            style={{ background: `linear-gradient(135deg, ${service.color}, #7c3aed)` }}>
+            Start a Project →
+          </button>
+        </motion.div>
+
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── CONTACT FORM MODAL ───────────────────────────────────────────────────────
+type FormType = 'project' | 'career';
+
+function ContactModal({ type, onClose }: { type: FormType; onClose: () => void }) {
+  const [fields, setFields] = useState({ name: '', email: '', company: '', message: '', role: '', portfolio: '' });
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const formId = type === 'project' ? FORM_PROJECT : FORM_CAREER;
+  const isProject = type === 'project';
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    setStatus('sending');
+    try {
+      const res = await fetch(`https://formspree.io/f/${formId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(fields),
+      });
+      if (res.ok) { setStatus('success'); playTone(880, 'sine', 0.3, 0.06); }
+      else setStatus('error');
+    } catch { setStatus('error'); }
+  }, [fields, formId]);
+
+  const inp = 'w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3 text-white text-sm placeholder-white/30 focus:outline-none focus:border-[#00ffcc]/50 transition-colors duration-300';
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      className="fixed inset-0 z-[9991] flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <motion.div
+        initial={{ scale: 0.92, opacity: 0, y: 30 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.92, opacity: 0, y: 30 }}
+        transition={{ duration: 0.35, ease: [0.34, 1.1, 0.64, 1] }}
+        className="w-full max-w-lg bg-[#0a0a0a] border border-white/10 rounded-3xl overflow-hidden"
+      >
+        {/* Header */}
+        <div className="px-8 pt-8 pb-6 border-b border-white/5 flex items-start justify-between">
+          <div>
+            <div className="text-[#00ffcc] text-xs font-mono tracking-[0.3em] uppercase mb-2">
+              {isProject ? 'Start a Project' : 'Join Our Team'}
+            </div>
+            <h2 className="text-2xl font-black text-white">
+              {isProject ? "Let's build something" : "Work with us"}
+            </h2>
+          </div>
+          <button onClick={onClose}
+            className="w-9 h-9 rounded-full border border-white/10 flex items-center justify-center hover:border-white/30 transition-colors duration-300 shrink-0 mt-1">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none">
+              <path d="M1 1L13 13M13 1L1 13" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="px-8 py-6 max-h-[70vh] overflow-y-auto">
+          {status === 'success' ? (
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-10">
+              <div className="w-16 h-16 rounded-full bg-[#00ffcc]/10 border border-[#00ffcc]/30 flex items-center justify-center mx-auto mb-6">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 13l4 4L19 7" stroke="#00ffcc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <h3 className="text-white font-black text-xl mb-3">Message Sent!</h3>
+              <p className="text-white/50 text-sm leading-relaxed">
+                {isProject ? "We'll review your project and get back to you within 24 hours." : "We'll review your application and reach out soon."}
+              </p>
+              <button onClick={onClose}
+                className="mt-8 px-8 py-3 rounded-full bg-white/5 border border-white/10 text-white/70 text-sm hover:bg-white/10 transition-colors duration-300">
+                Close
+              </button>
+            </motion.div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-white/40 text-xs tracking-wider uppercase mb-2 block">Name *</label>
+                  <input required className={inp} placeholder="Your name"
+                    value={fields.name} onChange={e => setFields(f => ({ ...f, name: e.target.value }))} />
+                </div>
+                <div>
+                  <label className="text-white/40 text-xs tracking-wider uppercase mb-2 block">Email *</label>
+                  <input required type="email" className={inp} placeholder="you@email.com"
+                    value={fields.email} onChange={e => setFields(f => ({ ...f, email: e.target.value }))} />
+                </div>
+              </div>
+              {isProject ? (
+                <>
+                  <div>
+                    <label className="text-white/40 text-xs tracking-wider uppercase mb-2 block">Company</label>
+                    <input className={inp} placeholder="Your company name"
+                      value={fields.company} onChange={e => setFields(f => ({ ...f, company: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-white/40 text-xs tracking-wider uppercase mb-2 block">Project Details *</label>
+                    <textarea required rows={4} className={inp + ' resize-none'} placeholder="Tell us about your project, goals, and timeline..."
+                      value={fields.message} onChange={e => setFields(f => ({ ...f, message: e.target.value }))} />
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-white/40 text-xs tracking-wider uppercase mb-2 block">Role Applying For *</label>
+                    <input required className={inp} placeholder="e.g. Frontend Developer"
+                      value={fields.role} onChange={e => setFields(f => ({ ...f, role: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-white/40 text-xs tracking-wider uppercase mb-2 block">Portfolio / LinkedIn</label>
+                    <input className={inp} placeholder="https://"
+                      value={fields.portfolio} onChange={e => setFields(f => ({ ...f, portfolio: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-white/40 text-xs tracking-wider uppercase mb-2 block">Why GenPandax? *</label>
+                    <textarea required rows={3} className={inp + ' resize-none'} placeholder="Tell us about yourself and why you want to join..."
+                      value={fields.message} onChange={e => setFields(f => ({ ...f, message: e.target.value }))} />
+                  </div>
+                </>
+              )}
+              {status === 'error' && (
+                <p className="text-red-400 text-xs">Something went wrong. Please try again.</p>
+              )}
+              <button type="submit" disabled={status === 'sending'}
+                className="w-full py-4 rounded-xl font-bold text-sm tracking-[0.15em] uppercase text-black transition-all duration-300 hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: 'linear-gradient(135deg, #00ffcc, #7c3aed)' }}>
+                {status === 'sending' ? 'Sending...' : isProject ? 'Send Project Brief' : 'Submit Application'}
+              </button>
+              <p className="text-white/20 text-xs text-center">We respond within 24 hours</p>
+            </form>
+          )}
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 // ─── LOADING SCREEN ───────────────────────────────────────────────────────────
 function Loader({ onComplete }: { onComplete: () => void }) {
@@ -371,7 +977,7 @@ function Nav({ scrolled }: { scrolled: boolean }) {
             </motion.button>
           ))}
           <motion.a
-            href={CONNECT_URL} target="_blank" rel="noopener noreferrer"
+            href="https://docs.google.com/forms/d/e/1FAIpQLSc-erIeSo8JJYRnlxlb3G5_0M8EWHZnTPLrPyhF6U_XvW3Czw/viewform?usp=header" target="_blank" rel="noopener noreferrer"
             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
             onMouseEnter={() => { resumeAudio(); playTone(880, 'sine', 0.1, 0.04); }}
             onClick={() => { resumeAudio(); playTone(660, 'triangle', 0.15, 0.06); }}
@@ -413,7 +1019,7 @@ function Nav({ scrolled }: { scrolled: boolean }) {
 }
 
 // ─── HERO SECTION ─────────────────────────────────────────────────────────────
-function Hero() {
+function Hero({ onOpenModal }: { onOpenModal: (t: FormType) => void }) {
   const titleRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -484,12 +1090,13 @@ function Hero() {
           transition={{ delay: 2, duration: 0.8 }}
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
-          <a href={CONNECT_URL} target="_blank" rel="noopener noreferrer"
+          <button
+            onClick={() => { resumeAudio(); playTone(660, 'triangle', 0.2, 0.06); onOpenModal('project'); }}
             className="group relative px-8 py-4 bg-white text-black font-bold text-sm tracking-[0.15em] uppercase rounded-full overflow-hidden hover:scale-105 transition-transform duration-300">
             <span className="relative z-10">Start a Project</span>
             <div className="absolute inset-0 bg-gradient-to-r from-[#00ffcc] to-[#7c3aed] translate-x-[-100%] group-hover:translate-x-0 transition-transform duration-500" />
             <span className="absolute inset-0 flex items-center justify-center text-white font-bold text-sm tracking-[0.15em] uppercase opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">Start a Project</span>
-          </a>
+          </button>
           <button onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
             className="px-8 py-4 border border-white/20 text-white/60 hover:text-white hover:border-white/40 font-medium text-sm tracking-[0.15em] uppercase rounded-full transition-all duration-300">
             Explore Work
@@ -625,6 +1232,7 @@ function About() {
 // ─── SERVICES SECTION ─────────────────────────────────────────────────────────
 function Services() {
   const sectionRef = useRef<HTMLElement>(null);
+  const [activeService, setActiveService] = useState<typeof SERVICE_DETAILS[0] | null>(null);
 
   useEffect(() => {
     if (!sectionRef.current) return;
@@ -634,30 +1242,14 @@ function Services() {
     );
   }, []);
 
-  const services = [
-    {
-      num: '01', title: 'Web Development', desc: 'Custom, high-performance websites built with React, Next.js, and modern frameworks. From landing pages to complex web applications.',
-      tags: ['React', 'Next.js', 'TypeScript', 'Node.js'],
-      color: '#00ffcc',
-    },
-    {
-      num: '02', title: 'Business Systems', desc: 'Intelligent management systems — CRM, inventory, analytics dashboards — built to scale with your business.',
-      tags: ['CRM', 'Analytics', 'Automation', 'Cloud'],
-      color: '#7c3aed',
-    },
-    {
-      num: '03', title: 'UI/UX Design', desc: 'Pixel-perfect interfaces with immersive interactions. We design experiences that convert visitors into loyal customers.',
-      tags: ['Figma', 'Motion', 'Prototyping', 'Design Systems'],
-      color: '#00ffcc',
-    },
-    {
-      num: '04', title: 'Performance & SEO', desc: 'Blazing-fast load times, Core Web Vitals optimization, and SEO strategies that drive organic growth.',
-      tags: ['Core Web Vitals', 'SEO', 'CDN', 'Optimization'],
-      color: '#7c3aed',
-    },
-  ];
+  const services = SERVICE_DETAILS;
 
   return (
+    <>
+      <AnimatePresence>
+        {activeService && <ServiceDetail service={activeService} onClose={() => setActiveService(null)} />}
+      </AnimatePresence>
+
     <section ref={sectionRef} id="services" className="relative py-40 px-6 bg-black">
       <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#7c3aed]/5 rounded-full blur-3xl pointer-events-none" />
 
@@ -677,18 +1269,19 @@ function Services() {
               <div className="relative z-10">
                 <div className="flex items-start justify-between mb-8">
                   <span className="text-xs font-mono text-white/20 tracking-widest">{s.num}</span>
-                <div className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center group-hover:border-white/30 group-hover:rotate-45 transition-all duration-300">
+                  <button
+                    onClick={() => { resumeAudio(); playTone(660, 'sine', 0.1, 0.05); setActiveService(s); }}
+                    className="w-8 h-8 rounded-full border border-white/10 flex items-center justify-center hover:border-white/40 hover:bg-white/5 group-hover:rotate-45 transition-all duration-300 cursor-pointer">
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                       <path d="M2 10L10 2M10 2H4M10 2V8" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
                     </svg>
-                  </div>
+                  </button>
                 </div>
                 <h3 className="text-2xl font-black text-white mb-4 group-hover:text-[#00ffcc] transition-colors duration-300">{s.title}</h3>
-                <p className="text-white/60 text-sm leading-relaxed mb-8">{s.desc}</p>
+                <p className="text-white/60 text-sm leading-relaxed mb-8">{s.overview}</p>
                 <div className="flex flex-wrap gap-2">
                   {s.tags.map((tag, j) => (
-                    <span key={j}
-                      className="text-xs px-3 py-1 border border-white/20 text-white/50 rounded-full group-hover:border-white/30 transition-colors duration-300">
+                    <span key={j} className="text-xs px-3 py-1 border border-white/20 text-white/50 rounded-full group-hover:border-white/30 transition-colors duration-300">
                       {tag}
                     </span>
                   ))}
@@ -699,6 +1292,7 @@ function Services() {
         </div>
       </div>
     </section>
+    </>
   );
 }
 
@@ -790,6 +1384,7 @@ function Projects() {
 // ─── CONTACT SECTION ──────────────────────────────────────────────────────────
 function Contact() {
   const sectionRef = useRef<HTMLElement>(null);
+  const [modal, setModal] = useState<FormType | null>(null);
 
   useEffect(() => {
     if (!sectionRef.current) return;
@@ -800,6 +1395,11 @@ function Contact() {
   }, []);
 
   return (
+    <>
+      <AnimatePresence>
+        {modal && <ContactModal type={modal} onClose={() => setModal(null)} />}
+      </AnimatePresence>
+
     <section ref={sectionRef} id="contact" className="relative py-40 px-6 bg-black overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00ffcc]/[0.02] to-transparent pointer-events-none" />
 
@@ -818,18 +1418,19 @@ function Contact() {
         </p>
 
         <div className="contact-reveal flex flex-col sm:flex-row gap-4 justify-center mb-20">
-          <a href={CONNECT_URL} target="_blank" rel="noopener noreferrer"
+          <button
             onMouseEnter={() => { resumeAudio(); playTone(880, 'sine', 0.1, 0.04); }}
-            onClick={() => { resumeAudio(); playTone(660, 'triangle', 0.2, 0.06); }}
+            onClick={() => { resumeAudio(); playTone(660, 'triangle', 0.2, 0.06); setModal('project'); }}
             className="group relative px-10 py-5 bg-white text-black font-bold text-sm tracking-[0.15em] uppercase rounded-full overflow-hidden hover:scale-105 transition-transform duration-300">
             <span className="relative z-10 group-hover:text-white transition-colors duration-300">Start a Project</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-[#00ffcc] to-[#7c3aed] translate-y-full group-hover:translate-y-0 transition-transform duration-400" />
-          </a>
-          <a href={CAREER_URL} target="_blank" rel="noopener noreferrer"
+            <div className="absolute inset-0 bg-gradient-to-r from-[#00ffcc] to-[#7c3aed] translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+          </button>
+          <button
             onMouseEnter={() => { resumeAudio(); playTone(550, 'sine', 0.1, 0.04); }}
+            onClick={() => { resumeAudio(); setModal('career'); }}
             className="px-10 py-5 border border-white/15 text-white/50 hover:text-white hover:border-white/30 font-medium text-sm tracking-[0.15em] uppercase rounded-full transition-all duration-300 hover:scale-105">
             Join Our Team
-          </a>
+          </button>
         </div>
 
         {/* Email links */}
@@ -862,6 +1463,7 @@ function Contact() {
         </div>
       </div>
     </section>
+    </>
   );
 }
 
@@ -885,6 +1487,7 @@ function Footer() {
 export default function App() {
   const [loaded, setLoaded] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [modal, setModal] = useState<FormType | null>(null);
 
   // Lenis smooth scroll + ScrollTrigger sync
   useEffect(() => {
@@ -936,7 +1539,7 @@ export default function App() {
         <Cursor />
         <Nav scrolled={scrolled} />
         <main>
-          <Hero />
+          <Hero onOpenModal={setModal} />
           <About />
           <Services />
           <Projects />
@@ -944,6 +1547,9 @@ export default function App() {
         </main>
         <Footer />
       </motion.div>
+      <AnimatePresence>
+        {modal && <ContactModal type={modal} onClose={() => setModal(null)} />}
+      </AnimatePresence>
     </>
   );
 }
