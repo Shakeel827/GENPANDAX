@@ -1,40 +1,149 @@
-import { useState, useEffect } from 'react';
-import { Menu, X, Mail, Linkedin, Instagram, ChevronRight, Code, Megaphone, Headphones, Users, Target, Zap } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Menu, X, Mail, Linkedin, Instagram, ChevronRight, Code, Globe, Database, ExternalLink, Star, Zap, Shield, Rocket, ArrowRight, Play, Sparkles, Brain, Cpu, Network } from 'lucide-react';
 
 function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [scrollY, setScrollY] = useState(0);
+  const [counters, setCounters] = useState({ projects: 0, clients: 0, experience: 0 });
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [particles, setParticles] = useState<Array<{id: number, x: number, y: number, size: number, speed: number, opacity: number}>>([]);
+  const heroRef = useRef<HTMLDivElement>(null);
+  
   const CONNECT_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSc-erIeSo8JJYRnlxlb3G5_0M8EWHZnTPLrPyhF6U_XvW3Czw/viewform?usp=header';
   const CAREER_FORM_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScQTWir8AUifF8NB2LF8hBKyJK3lnJ-oTiB-YuEIR25shFOXA/viewform?usp=header';
   const LINKEDIN_URL = 'https://www.linkedin.com/company/shakeelpandarise/';
   const INSTAGRAM_URL = 'https://www.instagram.com/genpandax_?igsh=MTBxZnV3Z25tandlZA==';
   const EMAIL = 'shakeelsk@pandascanpros.in';
 
+  // Initialize particles
+  useEffect(() => {
+    const initParticles = () => {
+      const newParticles = [];
+      for (let i = 0; i < 50; i++) {
+        newParticles.push({
+          id: i,
+          x: Math.random() * window.innerWidth,
+          y: Math.random() * window.innerHeight,
+          size: Math.random() * 3 + 1,
+          speed: Math.random() * 2 + 0.5,
+          opacity: Math.random() * 0.5 + 0.2
+        });
+      }
+      setParticles(newParticles);
+    };
+    initParticles();
+  }, []);
+
+  // Animate particles
+  useEffect(() => {
+    const animateParticles = () => {
+      setParticles(prev => prev.map(particle => ({
+        ...particle,
+        y: particle.y - particle.speed,
+        x: particle.x + Math.sin(particle.y * 0.01) * 0.5,
+        y: particle.y < -10 ? window.innerHeight + 10 : particle.y - particle.speed
+      })));
+    };
+
+    const interval = setInterval(animateParticles, 50);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Mouse tracking
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      setMousePosition({ x: e.clientX, y: e.clientY });
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
-    }, 2000);
+    }, 4000);
     return () => clearTimeout(timer);
   }, []);
 
-  const LogoComponent = () => (
-    <div className="flex items-center">
-      <div className="relative w-12 h-12">
-        <div className="absolute inset-0 bg-white rounded-full border-2 border-[#F57C00] flex items-center justify-center">
-          <svg viewBox="0 0 100 100" className="w-10 h-10">
-            <circle cx="50" cy="45" r="15" fill="#1A2E46" />
-            <circle cx="43" cy="42" r="3" fill="white" />
-            <circle cx="57" cy="42" r="3" fill="white" />
-            <path d="M 35 50 Q 50 58 65 50" stroke="#1A2E46" strokeWidth="2" fill="none" />
-            <circle cx="50" cy="35" r="20" fill="none" stroke="#F57C00" strokeWidth="2" />
-            <path d="M 45 25 L 50 20 L 55 25" fill="#F57C00" />
-            <circle cx="50" cy="70" r="18" fill="#1A2E46" opacity="0.3" />
-            <ellipse cx="50" cy="75" rx="12" ry="8" fill="#1A2E46" opacity="0.4" />
-          </svg>
+  useEffect(() => {
+    const handleScroll = () => setScrollY(window.scrollY);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      const animateCounters = () => {
+        const duration = 3000;
+        const targets = { projects: 50, clients: 100, experience: 3 };
+        const startTime = Date.now();
+        
+        const updateCounters = () => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+          
+          setCounters({
+            projects: Math.floor(targets.projects * easeOut),
+            clients: Math.floor(targets.clients * easeOut),
+            experience: Math.floor(targets.experience * easeOut)
+          });
+          
+          if (progress < 1) {
+            requestAnimationFrame(updateCounters);
+          }
+        };
+        
+        requestAnimationFrame(updateCounters);
+      };
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('animate-in');
+            if (entry.target.id === 'stats') {
+              animateCounters();
+              observer.unobserve(entry.target);
+            }
+          }
+        });
+      }, { threshold: 0.1 });
+      
+      document.querySelectorAll('.animate-on-scroll').forEach(el => observer.observe(el));
+      const statsElement = document.getElementById('stats');
+      if (statsElement) observer.observe(statsElement);
+    }
+  }, [loading]);
+
+  // World-class futuristic logo
+  const FuturisticLogo = () => (
+    <div className="relative group cursor-pointer">
+      <div className="relative w-12 h-12 transform transition-all duration-500 group-hover:scale-110 group-hover:rotate-12">
+        {/* Outer rotating ring */}
+        <div className="absolute inset-0 rounded-full border-2 border-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 animate-spin-slow opacity-60"></div>
+        
+        {/* Middle pulsing ring */}
+        <div className="absolute inset-1 rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-600/20 animate-pulse-ring"></div>
+        
+        {/* Core hexagon */}
+        <div className="absolute inset-2 bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 transform rotate-45 rounded-lg shadow-2xl shadow-cyan-500/50 animate-float-gentle">
+          <div className="absolute inset-0.5 bg-black rounded-md transform -rotate-45 flex items-center justify-center">
+            <div className="w-4 h-4 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-sm animate-glow-pulse"></div>
+          </div>
         </div>
-        <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#F57C00] rounded transform rotate-12 flex items-center justify-center">
-          <div className="w-4 h-3 bg-[#1A2E46] rounded-sm"></div>
+        
+        {/* Orbiting particles */}
+        <div className="absolute inset-0 animate-orbit">
+          <div className="absolute -top-1 left-1/2 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></div>
         </div>
+        <div className="absolute inset-0 animate-orbit-reverse">
+          <div className="absolute top-1/2 -right-1 w-1 h-1 bg-purple-500 rounded-full animate-pulse"></div>
+        </div>
+        
+        {/* Energy waves */}
+        <div className="absolute inset-0 rounded-full border border-cyan-400/30 animate-ping"></div>
+        <div className="absolute inset-0 rounded-full border border-purple-500/30 animate-ping" style={{animationDelay: '0.5s'}}></div>
       </div>
     </div>
   );
@@ -49,146 +158,354 @@ function App() {
 
   if (loading) {
     return (
-      <div className="fixed inset-0 bg-white flex items-center justify-center z-50">
-        <div className="text-center space-y-8">
-          <div className="relative">
-            <LogoComponent />
+      <div className="fixed inset-0 bg-black flex items-center justify-center z-50 overflow-hidden">
+        {/* Animated background with multiple layers */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black"></div>
+        
+        {/* Floating orbs */}
+        <div className="absolute inset-0">
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/30 to-blue-500/30 rounded-full blur-3xl animate-float-slow"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-3xl animate-float-slow-reverse"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-full blur-2xl animate-pulse-slow"></div>
+        </div>
+
+        {/* Matrix rain effect */}
+        <div className="absolute inset-0 opacity-20">
+          {Array.from({length: 20}).map((_, i) => (
+            <div key={i} className="absolute animate-matrix-rain" style={{
+              left: `${i * 5}%`,
+              animationDelay: `${i * 0.1}s`,
+              animationDuration: `${2 + Math.random() * 2}s`
+            }}>
+              <div className="w-px h-20 bg-gradient-to-b from-transparent via-cyan-400 to-transparent"></div>
+            </div>
+          ))}
+        </div>
+
+        {/* Loading content */}
+        <div className="text-center space-y-12 relative z-10">
+          <div className="relative scale-150">
+            <FuturisticLogo />
             <div className="absolute inset-0 animate-ping opacity-25">
-              <div className="w-12 h-12 bg-[#F57C00] rounded-full"></div>
+              <div className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-purple-600 rounded-full"></div>
             </div>
           </div>
-          <div className="space-y-4">
-            <div className="text-2xl font-bold text-[#1A2E46] animate-fade-in">GENPANDAX</div>
-            <div className="flex items-center justify-center gap-2">
-              <div className="w-2 h-2 bg-[#F57C00] rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-2 h-2 bg-[#F57C00] rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-              <div className="w-2 h-2 bg-[#F57C00] rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          
+          <div className="space-y-8">
+            <div className="text-6xl font-black bg-gradient-to-r from-cyan-400 via-blue-500 via-purple-600 to-pink-500 bg-clip-text text-transparent animate-gradient-x">
+              GENPANDAX
+            </div>
+            <div className="text-gray-300 text-xl font-light tracking-wider animate-fade-in-up">
+              Building Tomorrow's Web Today
+            </div>
+            
+            {/* Loading progress */}
+            <div className="w-64 h-1 bg-gray-800 rounded-full mx-auto overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full animate-loading-bar"></div>
+            </div>
+            
+            {/* Floating particles */}
+            <div className="flex items-center justify-center gap-3">
+              {Array.from({length: 5}).map((_, i) => (
+                <div key={i} className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{
+                  animationDelay: `${i * 0.1}s`,
+                  animationDuration: '1s'
+                }}></div>
+              ))}
             </div>
           </div>
+        </div>
+
+        {/* Scanning lines */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-cyan-400 to-transparent animate-scan-horizontal"></div>
+          <div className="absolute top-0 left-0 w-px h-full bg-gradient-to-b from-transparent via-purple-500 to-transparent animate-scan-vertical"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
+      {/* Cursor follower */}
+      <div 
+        className="fixed w-6 h-6 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full pointer-events-none z-50 mix-blend-difference transition-transform duration-100 ease-out"
+        style={{
+          left: mousePosition.x - 12,
+          top: mousePosition.y - 12,
+          transform: `scale(${mobileMenuOpen ? 1.5 : 1})`
+        }}
+      ></div>
+
+      {/* Animated particles background */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        {particles.map(particle => (
+          <div
+            key={particle.id}
+            className="absolute w-1 h-1 bg-cyan-400 rounded-full animate-twinkle"
+            style={{
+              left: particle.x,
+              top: particle.y,
+              width: particle.size,
+              height: particle.size,
+              opacity: particle.opacity
+            }}
+          ></div>
+        ))}
+      </div>
+
+      {/* Dynamic background layers */}
+      <div className="fixed inset-0 z-0">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-gray-900 to-black"></div>
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-float-gentle"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-float-gentle-reverse"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-full blur-3xl animate-pulse-gentle"></div>
+        </div>
+        
+        {/* Grid overlay */}
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: `
+            linear-gradient(rgba(6, 182, 212, 0.1) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(6, 182, 212, 0.1) 1px, transparent 1px)
+          `,
+          backgroundSize: '50px 50px'
+        }}></div>
+      </div>
+
       {/* Navigation */}
-      <nav className="fixed w-full bg-white/95 backdrop-blur-sm shadow-sm z-50">
+      <nav className={`fixed w-full z-50 transition-all duration-500 ${scrollY > 50 ? 'bg-black/90 backdrop-blur-2xl border-b border-cyan-500/20 shadow-2xl shadow-cyan-500/10' : 'bg-transparent'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
-            <div className="flex items-center space-x-3">
-              <LogoComponent />
+            <div className="flex items-center space-x-4 group animate-slide-in-left">
+              <FuturisticLogo />
               <div>
-                <div className="text-[#1A2E46] font-bold text-xl">GENPANDAX</div>
-                <div className="text-[#F57C00] text-xs font-semibold">Next-Gen Jobs, With GENPANDAX.</div>
+                <div className="text-white font-black text-2xl bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-gradient-x">
+                  GENPANDAX
+                </div>
+                <div className="text-gray-400 text-xs font-medium tracking-wider">Next-Gen Solutions</div>
               </div>
             </div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <button onClick={() => scrollToSection('home')} className="text-[#1A2E46] hover:text-[#F57C00] font-medium transition">Home</button>
-              <button onClick={() => scrollToSection('about')} className="text-[#1A2E46] hover:text-[#F57C00] font-medium transition">About</button>
-              <button onClick={() => scrollToSection('services')} className="text-[#1A2E46] hover:text-[#F57C00] font-medium transition">Services</button>
-              <button onClick={() => scrollToSection('team')} className="text-[#1A2E46] hover:text-[#F57C00] font-medium transition">Team</button>
+            <div className="hidden md:flex items-center space-x-8 animate-slide-in-right">
+              {['Home', 'About', 'Services', 'Projects'].map((item, idx) => (
+                <button 
+                  key={item}
+                  onClick={() => scrollToSection(item.toLowerCase())} 
+                  className="relative text-gray-300 hover:text-cyan-400 font-medium transition-all duration-300 group animate-fade-in"
+                  style={{animationDelay: `${idx * 0.1}s`}}
+                >
+                  {item}
+                  <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-cyan-400 to-purple-500 group-hover:w-full transition-all duration-500"></span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-purple-500/10 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10"></span>
+                </button>
+              ))}
               <a
                 href={CONNECT_FORM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-[#F57C00] text-white px-6 py-2.5 rounded-full font-semibold hover:bg-[#E65100] transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="relative bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-8 py-3 rounded-full font-bold hover:from-cyan-400 hover:to-purple-500 transition-all duration-300 shadow-2xl shadow-cyan-500/25 hover:shadow-cyan-500/50 transform hover:-translate-y-1 hover:scale-105 animate-glow-pulse group"
               >
-                Connect
+                <span className="relative z-10">Get Started</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-pulse"></div>
               </a>
             </div>
 
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-[#1A2E46]"
+              className="md:hidden text-white hover:text-cyan-400 transition-all duration-300 transform hover:scale-110 animate-slide-in-right"
             >
-              {mobileMenuOpen ? <X size={28} /> : <Menu size={28} />}
+              <div className="relative">
+                {mobileMenuOpen ? <X size={28} className="animate-spin-in" /> : <Menu size={28} className="animate-fade-in" />}
+              </div>
             </button>
           </div>
         </div>
 
         {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t">
-            <div className="px-4 py-4 space-y-3">
-              <button onClick={() => scrollToSection('home')} className="block w-full text-left text-[#1A2E46] hover:text-[#F57C00] font-medium py-2">Home</button>
-              <button onClick={() => scrollToSection('about')} className="block w-full text-left text-[#1A2E46] hover:text-[#F57C00] font-medium py-2">About</button>
-              <button onClick={() => scrollToSection('services')} className="block w-full text-left text-[#1A2E46] hover:text-[#F57C00] font-medium py-2">Services</button>
-              <button onClick={() => scrollToSection('team')} className="block w-full text-left text-[#1A2E46] hover:text-[#F57C00] font-medium py-2">Team</button>
+        <div className={`md:hidden transition-all duration-500 ${mobileMenuOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'} overflow-hidden`}>
+          <div className="bg-black/95 backdrop-blur-2xl border-t border-cyan-500/20">
+            <div className="px-4 py-6 space-y-4">
+              {['Home', 'About', 'Services', 'Projects'].map((item, idx) => (
+                <button 
+                  key={item}
+                  onClick={() => scrollToSection(item.toLowerCase())} 
+                  className="block w-full text-left text-gray-300 hover:text-cyan-400 font-medium py-3 transition-all duration-300 hover:translate-x-2 animate-slide-in-left"
+                  style={{animationDelay: `${idx * 0.1}s`}}
+                >
+                  {item}
+                </button>
+              ))}
               <a
                 href={CONNECT_FORM_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block bg-[#F57C00] text-white px-6 py-2.5 rounded-full font-semibold text-center hover:bg-[#E65100] transition"
+                className="block bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-6 py-4 rounded-full font-bold text-center hover:from-cyan-400 hover:to-purple-500 transition-all duration-300 animate-slide-in-left"
+                style={{animationDelay: '0.4s'}}
               >
-                Connect
+                Get Started
               </a>
             </div>
           </div>
-        )}
+        </div>
       </nav>
 
       {/* Hero Section */}
-      <section id="home" className="pt-24 sm:pt-32 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#1A2E46] via-[#243B55] to-[#1A2E46] overflow-hidden relative">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-64 h-64 bg-[#F57C00] rounded-full blur-3xl animate-float"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#F57C00] rounded-full blur-3xl animate-float" style={{ animationDelay: '1s' }}></div>
-        </div>
+      <section ref={heroRef} id="home" className="relative min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="text-white space-y-4 sm:space-y-6 animate-fade-in">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
-                Empowering Business with <span className="text-[#F57C00]">Digital, IT & Outsourcing</span> Solutions
+          <div className="text-center space-y-12 animate-hero-entrance">
+            <div className="space-y-8">
+              <div className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-full px-6 py-3 text-sm text-cyan-400 backdrop-blur-sm animate-float-gentle group hover:scale-105 transition-transform duration-300">
+                <Sparkles size={18} className="animate-spin-slow" />
+                <span className="font-medium">Next-Generation Web Solutions</span>
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+              </div>
+              
+              <h1 className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight">
+                <span className="block bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent animate-slide-up" style={{animationDelay: '0.2s'}}>
+                  We Build Smart
+                </span>
+                <span className="block bg-gradient-to-r from-cyan-400 via-blue-500 via-purple-600 to-pink-500 bg-clip-text text-transparent animate-gradient-x animate-slide-up" style={{animationDelay: '0.4s'}}>
+                  Websites That Run
+                </span>
+                <span className="block bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent animate-slide-up" style={{animationDelay: '0.6s'}}>
+                  and Grow Your Business
+                </span>
               </h1>
-              <p className="text-base sm:text-lg md:text-xl text-gray-300">
-                Next-generation consulting services powered by 15+ professionals in BPO delivering innovation, reliability, and client success.
+              
+              <p className="text-xl sm:text-2xl text-gray-400 max-w-4xl mx-auto leading-relaxed animate-fade-in-up" style={{animationDelay: '0.8s'}}>
+                Transform your business with cutting-edge websites and intelligent management systems that drive growth, efficiency, and success in the digital age.
               </p>
-              <div className="flex flex-wrap gap-3 sm:gap-4">
-                <a
-                  href={CONNECT_FORM_URL}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-[#F57C00] text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base rounded-full font-semibold hover:bg-[#E65100] transition shadow-xl hover:shadow-2xl transform hover:-translate-y-1 flex items-center gap-2 animate-glow"
-                >
-                  Get Started <ChevronRight size={20} />
-                </a>
-                <button
-                  onClick={() => scrollToSection('services')}
-                  className="bg-white/10 backdrop-blur-sm text-white px-6 sm:px-8 py-3 sm:py-4 text-sm sm:text-base rounded-full font-semibold hover:bg-white/20 transition border border-white/30 transform hover:scale-105"
-                >
-                  Our Services
-                </button>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up" style={{animationDelay: '1s'}}>
+              <a
+                href={CONNECT_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-10 py-5 text-xl rounded-full font-bold hover:from-cyan-400 hover:to-purple-500 transition-all duration-500 shadow-2xl shadow-cyan-500/25 hover:shadow-cyan-500/50 transform hover:-translate-y-2 hover:scale-105 flex items-center gap-4 animate-glow-pulse"
+              >
+                <span className="relative z-10">Start Your Project</span>
+                <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform duration-300 animate-bounce-x" />
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
+              </a>
+              
+              <button
+                onClick={() => scrollToSection('projects')}
+                className="group relative bg-white/5 backdrop-blur-sm border-2 border-white/20 text-white px-10 py-5 text-xl rounded-full font-bold hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-500 flex items-center gap-4 hover:scale-105 transform hover:-translate-y-1"
+              >
+                <Play size={24} className="group-hover:scale-125 transition-transform duration-300 animate-pulse" />
+                <span>View Our Work</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-purple-500/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </button>
+            </div>
+
+            {/* Animated Stats */}
+            <div id="stats" className="grid grid-cols-3 gap-8 pt-20 max-w-3xl mx-auto animate-on-scroll">
+              {[
+                { value: counters.projects, suffix: '+', label: 'Projects Delivered', gradient: 'from-cyan-400 to-blue-500', delay: '0s' },
+                { value: counters.clients, suffix: '%', label: 'Client Satisfaction', gradient: 'from-blue-500 to-purple-600', delay: '0.2s' },
+                { value: counters.experience, suffix: '+', label: 'Years Experience', gradient: 'from-purple-600 to-pink-500', delay: '0.4s' }
+              ].map((stat, idx) => (
+                <div key={idx} className="text-center group cursor-pointer animate-fade-in-up" style={{animationDelay: stat.delay}}>
+                  <div className={`text-4xl sm:text-5xl font-black bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent group-hover:scale-125 transition-all duration-500 animate-counter-up`}>
+                    {stat.value}{stat.suffix}
+                  </div>
+                  <div className="text-gray-400 text-base sm:text-lg font-medium mt-2 group-hover:text-gray-300 transition-colors duration-300">
+                    {stat.label}
+                  </div>
+                  <div className={`w-12 h-1 bg-gradient-to-r ${stat.gradient} mx-auto mt-3 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300`}></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Floating elements */}
+        <div className="absolute inset-0 pointer-events-none">
+          {Array.from({length: 10}).map((_, i) => (
+            <div
+              key={i}
+              className="absolute w-2 h-2 bg-gradient-to-r from-cyan-400 to-purple-600 rounded-full animate-float-random opacity-30"
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+                animationDelay: `${Math.random() * 5}s`,
+                animationDuration: `${5 + Math.random() * 5}s`
+              }}
+            ></div>
+          ))}
+        </div>
+      </section>
+
+      {/* About Section */}
+      <section id="about" className="relative py-32 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid lg:grid-cols-2 gap-20 items-center">
+            <div className="space-y-10 animate-on-scroll">
+              <div className="space-y-6">
+                <div className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-full px-6 py-3 text-sm text-purple-400 animate-float-gentle">
+                  <Brain size={18} className="animate-pulse" />
+                  <span className="font-medium">About GENPANDAX</span>
+                </div>
+                
+                <h2 className="text-5xl sm:text-6xl font-black leading-tight">
+                  <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-slide-up">
+                    Pioneering the Future of
+                  </span>
+                  <br />
+                  <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-gradient-x">
+                    Digital Innovation
+                  </span>
+                </h2>
+                
+                <p className="text-xl text-gray-400 leading-relaxed animate-fade-in-up">
+                  We're not just developers – we're digital architects crafting the future of business technology. Our mission is to transform ideas into powerful, scalable solutions that drive real growth and innovation.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-6">
+                {[
+                  { icon: Rocket, title: 'Innovation First', desc: 'Cutting-edge technology solutions', color: 'cyan' },
+                  { icon: Shield, title: 'Reliable & Secure', desc: 'Enterprise-grade security standards', color: 'blue' },
+                  { icon: Zap, title: 'Lightning Fast', desc: 'Optimized for peak performance', color: 'purple' },
+                  { icon: Star, title: 'Premium Quality', desc: 'Exceptional attention to detail', color: 'pink' }
+                ].map((item, idx) => (
+                  <div key={idx} className={`group p-6 bg-gradient-to-br from-white/5 to-white/10 backdrop-blur-sm border border-white/10 rounded-2xl hover:border-${item.color}-500/30 transition-all duration-500 hover:scale-105 cursor-pointer animate-fade-in-up hover:shadow-2xl hover:shadow-${item.color}-500/20`} style={{animationDelay: `${idx * 0.1}s`}}>
+                    <item.icon className={`text-${item.color}-400 mb-4 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 animate-float-gentle`} size={28} />
+                    <h4 className="font-bold text-white mb-3 text-lg group-hover:text-cyan-400 transition-colors duration-300">{item.title}</h4>
+                    <p className="text-gray-400 text-sm leading-relaxed group-hover:text-gray-300 transition-colors duration-300">{item.desc}</p>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="flex justify-center items-center mt-8 md:mt-0">
-              <div className="relative">
-                <div className="absolute inset-0 bg-[#F57C00] rounded-full blur-3xl opacity-20 animate-pulse"></div>
-                <div className="relative bg-white/10 backdrop-blur-md p-4 sm:p-6 md:p-8 rounded-2xl md:rounded-3xl border border-white/20 shadow-2xl animate-slide-up">
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-                    <div className="bg-white/20 p-3 sm:p-4 md:p-6 rounded-xl md:rounded-2xl backdrop-blur-sm hover:scale-105 transition-transform cursor-pointer">
-                      <Code className="text-[#F57C00] mb-1 sm:mb-2" size={24} />
-                      <div className="text-white font-bold text-xl sm:text-2xl">15+</div>
-                      <div className="text-gray-300 text-xs sm:text-sm">in BPO</div>
-                    </div>
-                    <div className="bg-white/20 p-3 sm:p-4 md:p-6 rounded-xl md:rounded-2xl backdrop-blur-sm hover:scale-105 transition-transform cursor-pointer">
-                      <Target className="text-[#F57C00] mb-1 sm:mb-2" size={24} />
-                      <div className="text-white font-bold text-xl sm:text-2xl">100%</div>
-                      <div className="text-gray-300 text-xs sm:text-sm">Dedication</div>
-                    </div>
-                    <div className="bg-white/20 p-3 sm:p-4 md:p-6 rounded-xl md:rounded-2xl backdrop-blur-sm hover:scale-105 transition-transform cursor-pointer">
-                      <Zap className="text-[#F57C00] mb-1 sm:mb-2" size={24} />
-                      <div className="text-white font-bold text-xl sm:text-2xl">Fast</div>
-                      <div className="text-gray-300 text-xs sm:text-sm">Delivery</div>
-                    </div>
-                    <div className="bg-white/20 p-3 sm:p-4 md:p-6 rounded-xl md:rounded-2xl backdrop-blur-sm hover:scale-105 transition-transform cursor-pointer">
-                      <Users className="text-[#F57C00] mb-1 sm:mb-2" size={24} />
-                      <div className="text-white font-bold text-xl sm:text-2xl">24/7</div>
-                      <div className="text-gray-300 text-xs sm:text-sm">Support</div>
-                    </div>
+
+            <div className="relative animate-on-scroll">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/30 to-purple-600/30 rounded-3xl blur-3xl animate-pulse-gentle"></div>
+              <div className="relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl p-10 shadow-2xl hover:scale-105 transition-transform duration-500">
+                <div className="space-y-8">
+                  <h3 className="text-3xl font-black text-white bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">
+                    Why Choose GENPANDAX?
+                  </h3>
+                  <div className="space-y-5">
+                    {[
+                      'Custom website development with modern frameworks',
+                      'Intelligent business management systems',
+                      'Scalable cloud-based solutions',
+                      'Mobile-first responsive design',
+                      'SEO optimization and performance tuning',
+                      '24/7 support and maintenance'
+                    ].map((item, idx) => (
+                      <div key={idx} className="flex items-start gap-4 group hover:translate-x-3 transition-all duration-300 animate-fade-in-up" style={{animationDelay: `${idx * 0.1}s`}}>
+                        <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1 group-hover:scale-110 group-hover:rotate-180 transition-all duration-500">
+                          <ChevronRight size={16} className="text-white" />
+                        </div>
+                        <p className="text-gray-300 leading-relaxed group-hover:text-white transition-colors duration-300">{item}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -197,54 +514,79 @@ function App() {
         </div>
       </section>
 
-      {/* About Section */}
-      <section id="about" className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8 sm:mb-12 md:mb-16 animate-slide-up">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1A2E46] mb-4">About GENPANDAX</h2>
-            <div className="w-24 h-1 bg-[#F57C00] mx-auto rounded-full"></div>
+      {/* Services Section */}
+      <section id="services" className="relative py-32 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="text-center mb-20 animate-on-scroll">
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/30 rounded-full px-6 py-3 text-sm text-blue-400 mb-8 animate-float-gentle">
+              <Cpu size={18} className="animate-spin-slow" />
+              <span className="font-medium">Our Services</span>
+            </div>
+            
+            <h2 className="text-5xl sm:text-6xl font-black mb-8 leading-tight">
+              <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-slide-up">
+                Comprehensive Digital
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-gradient-x">
+                Solutions
+              </span>
+            </h2>
+            
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed animate-fade-in-up">
+              From concept to deployment, we deliver end-to-end solutions that transform your business and drive unprecedented growth
+            </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center">
-            <div className="space-y-4 sm:space-y-6 animate-fade-in">
-              <h3 className="text-2xl sm:text-3xl font-bold text-[#1A2E46]">Innovating the Future of Business</h3>
-              <p className="text-gray-700 text-base sm:text-lg leading-relaxed">
-                GENPANDAX Consulting is a fast-growing startup revolutionizing how businesses approach technology, marketing, and operations. With a talented team of over <span className="font-bold text-[#F57C00]">15+ professionals in BPO</span>, we bring innovation, reliability, and expertise to every project.
-              </p>
-              <p className="text-gray-700 text-base sm:text-lg leading-relaxed">
-                Our mission is simple: <span className="font-semibold">empower businesses to thrive in the digital age</span>. We combine cutting-edge technology with creative strategies to deliver measurable results. From building powerful software solutions to crafting compelling digital campaigns, we're your partner in growth.
-              </p>
-              <div className="grid grid-cols-3 gap-3 sm:gap-4 pt-4 sm:pt-6">
-                <div className="text-center p-2 sm:p-4 hover:scale-110 transition-transform cursor-pointer">
-                  <div className="text-2xl sm:text-3xl font-bold text-[#F57C00]">15+</div>
-                  <div className="text-gray-600 text-xs sm:text-sm">Professionals</div>
+
+          <div className="grid md:grid-cols-2 gap-10">
+            {/* Website Development */}
+            <div className="group relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl p-10 hover:border-cyan-500/50 transition-all duration-700 hover:scale-105 cursor-pointer animate-on-scroll hover:shadow-2xl hover:shadow-cyan-500/20">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div className="relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-2xl shadow-cyan-500/30">
+                  <Globe className="text-white animate-float-gentle" size={36} />
                 </div>
-                <div className="text-center p-2 sm:p-4 hover:scale-110 transition-transform cursor-pointer">
-                  <div className="text-2xl sm:text-3xl font-bold text-[#F57C00]">3</div>
-                  <div className="text-gray-600 text-xs sm:text-sm">Core Services</div>
-                </div>
-                <div className="text-center p-2 sm:p-4 hover:scale-110 transition-transform cursor-pointer">
-                  <div className="text-2xl sm:text-3xl font-bold text-[#F57C00]">100%</div>
-                  <div className="text-gray-600 text-xs sm:text-sm">Client Focus</div>
+                
+                <h3 className="text-3xl font-black text-white mb-6 group-hover:text-cyan-400 transition-colors duration-300">
+                  Website Development
+                </h3>
+                
+                <p className="text-gray-400 mb-8 leading-relaxed text-lg group-hover:text-gray-300 transition-colors duration-300">
+                  Custom, responsive websites built with cutting-edge technologies. From simple landing pages to complex web applications, we create digital experiences that convert visitors into customers.
+                </p>
+                
+                <div className="space-y-4">
+                  {['React & Next.js Development', 'E-commerce Solutions', 'Progressive Web Apps', 'API Integration', 'Performance Optimization'].map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-4 text-gray-300 hover:text-cyan-400 transition-all duration-300 group-hover:translate-x-2 animate-fade-in-up" style={{animationDelay: `${idx * 0.1}s`}}>
+                      <div className="w-3 h-3 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full animate-pulse"></div>
+                      <span className="font-medium">{item}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-            <div className="relative animate-slide-up">
-              <div className="bg-gradient-to-br from-[#1A2E46] to-[#243B55] p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-2xl hover:shadow-3xl transition-shadow">
-                <h4 className="text-xl sm:text-2xl font-bold text-white mb-4 sm:mb-6">Why Choose Us?</h4>
+
+            {/* Business Management Systems */}
+            <div className="group relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl p-10 hover:border-purple-500/50 transition-all duration-700 hover:scale-105 cursor-pointer animate-on-scroll hover:shadow-2xl hover:shadow-purple-500/20">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div className="relative z-10">
+                <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-3xl flex items-center justify-center mb-8 group-hover:scale-125 group-hover:rotate-12 transition-all duration-500 shadow-2xl shadow-purple-500/30">
+                  <Database className="text-white animate-float-gentle" size={36} />
+                </div>
+                
+                <h3 className="text-3xl font-black text-white mb-6 group-hover:text-purple-400 transition-colors duration-300">
+                  Business Management Systems
+                </h3>
+                
+                <p className="text-gray-400 mb-8 leading-relaxed text-lg group-hover:text-gray-300 transition-colors duration-300">
+                  Streamline your operations with intelligent management systems. From inventory tracking to customer relationship management, we build solutions that grow with your business.
+                </p>
+                
                 <div className="space-y-4">
-                  {[
-                    'Experienced team of 15+ professionals in BPO',
-                    'End-to-end solutions for IT, Marketing & BPO',
-                    'Innovation-driven approach',
-                    'Reliable and timely delivery',
-                    'Client success as our priority',
-                    '24/7 support and maintenance'
-                  ].map((item, idx) => (
-                    <div key={idx} className="flex items-start gap-2 sm:gap-3 hover:translate-x-2 transition-transform">
-                      <div className="w-5 h-5 sm:w-6 sm:h-6 bg-[#F57C00] rounded-full flex items-center justify-center flex-shrink-0 mt-1">
-                        <ChevronRight size={14} className="text-white" />
-                      </div>
-                      <p className="text-gray-200 text-sm sm:text-base">{item}</p>
+                  {['Inventory Management', 'CRM Systems', 'Analytics Dashboards', 'Workflow Automation', 'Cloud Integration'].map((item, idx) => (
+                    <div key={idx} className="flex items-center gap-4 text-gray-300 hover:text-purple-400 transition-all duration-300 group-hover:translate-x-2 animate-fade-in-up" style={{animationDelay: `${idx * 0.1}s`}}>
+                      <div className="w-3 h-3 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full animate-pulse"></div>
+                      <span className="font-medium">{item}</span>
                     </div>
                   ))}
                 </div>
@@ -254,193 +596,247 @@ function App() {
         </div>
       </section>
 
-      {/* Services Section */}
-      <section id="services" className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-8 sm:mb-12 md:mb-16 animate-slide-up">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1A2E46] mb-4">Our Services</h2>
-            <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto">Comprehensive solutions tailored to your business needs</p>
-            <div className="w-24 h-1 bg-[#F57C00] mx-auto rounded-full mt-4"></div>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-            {/* Digital Marketing */}
-            <div className="group bg-gradient-to-br from-gray-50 to-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-[#F57C00] hover:-translate-y-2 animate-fade-in">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#F57C00] to-[#FF9800] rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all">
-                <Megaphone className="text-white" size={28} />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-[#1A2E46] mb-3 sm:mb-4">Digital Marketing</h3>
-              <p className="text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">Creative strategies that amplify your brand and drive growth through powerful digital campaigns.</p>
-              <ul className="space-y-2 sm:space-y-3">
-                {['SEO Optimization', 'Social Media Marketing', 'Google & Facebook Ads', 'Content Marketing', 'Brand Strategy', 'Analytics & Reporting'].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-gray-700 text-sm sm:text-base hover:text-[#F57C00] transition-colors">
-                    <div className="w-1.5 h-1.5 bg-[#F57C00] rounded-full flex-shrink-0"></div>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* IT Services */}
-            <div className="group bg-gradient-to-br from-gray-50 to-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-[#F57C00] hover:-translate-y-2 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#1A2E46] to-[#243B55] rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all">
-                <Code className="text-white" size={28} />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-[#1A2E46] mb-3 sm:mb-4">IT Services</h3>
-              <p className="text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">Cutting-edge technology solutions built by expert engineers to power your digital transformation.</p>
-              <ul className="space-y-2 sm:space-y-3">
-                {['Web Development', 'Mobile App Development', 'Software Development', 'Cloud Solutions', 'IT Infrastructure', 'Technical Support'].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-gray-700 text-sm sm:text-base hover:text-[#1A2E46] transition-colors">
-                    <div className="w-1.5 h-1.5 bg-[#1A2E46] rounded-full flex-shrink-0"></div>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* BPO Services */}
-            <div className="group bg-gradient-to-br from-gray-50 to-white p-6 sm:p-8 rounded-2xl sm:rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-[#F57C00] hover:-translate-y-2 animate-fade-in sm:col-span-2 lg:col-span-1" style={{ animationDelay: '0.2s' }}>
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-[#F57C00] to-[#FF9800] rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all">
-                <Headphones className="text-white" size={28} />
-              </div>
-              <h3 className="text-xl sm:text-2xl font-bold text-[#1A2E46] mb-3 sm:mb-4">BPO Services</h3>
-              <p className="text-gray-600 text-sm sm:text-base mb-4 sm:mb-6">Efficient outsourcing solutions that streamline operations and enhance customer experience.</p>
-              <ul className="space-y-2 sm:space-y-3">
-                {['Customer Support', 'Technical Help Desk', 'Data Entry Services', 'Tele-calling', 'Back Office Support', 'Virtual Assistance'].map((item, idx) => (
-                  <li key={idx} className="flex items-center gap-2 text-gray-700 text-sm sm:text-base hover:text-[#F57C00] transition-colors">
-                    <div className="w-1.5 h-1.5 bg-[#F57C00] rounded-full flex-shrink-0"></div>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Team Section */}
-      <section id="team" className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-br from-[#1A2E46] to-[#243B55] relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-10 right-10 w-64 h-64 bg-[#F57C00] rounded-full blur-3xl animate-float"></div>
-        </div>
+      {/* Projects Section */}
+      <section id="projects" className="relative py-32 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center mb-8 sm:mb-12 md:mb-16 animate-slide-up">
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">Our Expert Team</h2>
-            <p className="text-gray-300 text-base sm:text-lg max-w-2xl mx-auto">Meet the talented professionals driving innovation at GENPANDAX</p>
-            <div className="w-24 h-1 bg-[#F57C00] mx-auto rounded-full mt-4"></div>
+          <div className="text-center mb-20 animate-on-scroll">
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-500/30 rounded-full px-6 py-3 text-sm text-green-400 mb-8 animate-float-gentle">
+              <Network size={18} className="animate-pulse" />
+              <span className="font-medium">Featured Projects</span>
+            </div>
+            
+            <h2 className="text-5xl sm:text-6xl font-black mb-8 leading-tight">
+              <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-slide-up">
+                Our Latest
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-gradient-x">
+                Masterpieces
+              </span>
+            </h2>
+            
+            <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed animate-fade-in-up">
+              Explore our portfolio of cutting-edge projects that showcase our expertise, innovation, and commitment to excellence
+            </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 md:gap-8 mb-8 sm:mb-12">
-            {[
-              { role: 'Full-Stack Developers', count: '5+', icon: Code, skills: ['React, Node.js, Python'] },
-              { role: 'Mobile App Developers', count: '3+', icon: Code, skills: ['iOS, Android, React Native'] },
-              { role: 'Digital Marketers', count: '3+', icon: Megaphone, skills: ['SEO, SEM, Social Media'] },
-              { role: 'Cloud Engineers', count: '2+', icon: Code, skills: ['AWS, Azure, DevOps'] },
-              { role: 'BPO Specialists', count: '2+', icon: Headphones, skills: ['Customer Support, Data Entry'] },
-              { role: 'UI/UX Designers', count: '2+', icon: Code, skills: ['Figma, Adobe XD, Prototyping'] }
-            ].map((team, idx) => (
-              <div key={idx} className="bg-white/10 backdrop-blur-md p-4 sm:p-6 rounded-xl sm:rounded-2xl border border-white/20 hover:bg-white/20 transition-all hover:scale-105 cursor-pointer animate-fade-in">
-                <div className="flex items-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-[#F57C00] rounded-lg sm:rounded-xl flex items-center justify-center">
-                    <team.icon className="text-white" size={20} />
+          <div className="grid md:grid-cols-2 gap-10">
+            {/* Inventory Management System */}
+            <div className="group relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl overflow-hidden hover:border-cyan-500/50 transition-all duration-700 hover:scale-105 animate-on-scroll hover:shadow-2xl hover:shadow-cyan-500/30">
+              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 to-blue-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div className="relative z-10 p-10">
+                <div className="flex items-center gap-6 mb-8">
+                  <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-xl shadow-cyan-500/30">
+                    <Database className="text-white animate-float-gentle" size={28} />
                   </div>
                   <div>
-                    <div className="text-xl sm:text-2xl font-bold text-white">{team.count}</div>
-                    <div className="text-[#F57C00] font-semibold text-sm sm:text-base">{team.role}</div>
+                    <h3 className="text-2xl font-black text-white group-hover:text-cyan-400 transition-colors duration-300">
+                      Smart Inventory System
+                    </h3>
+                    <p className="text-gray-400 text-sm font-medium tracking-wider">Advanced Management Platform</p>
                   </div>
                 </div>
-                <div className="text-gray-300 text-xs sm:text-sm">{team.skills.join(', ')}</div>
+                
+                <p className="text-gray-400 mb-8 leading-relaxed text-lg group-hover:text-gray-300 transition-colors duration-300">
+                  A comprehensive inventory management system with real-time tracking, automated alerts, and intelligent analytics. Built with modern React architecture and cloud integration for maximum scalability.
+                </p>
+                
+                <div className="flex flex-wrap gap-3 mb-8">
+                  {['React', 'Node.js', 'MongoDB', 'Real-time Analytics'].map((tech, idx) => (
+                    <span key={idx} className="px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-full text-sm border border-cyan-500/30 font-medium hover:bg-cyan-500/30 hover:scale-105 transition-all duration-300 animate-fade-in-up" style={{animationDelay: `${idx * 0.1}s`}}>
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+                
+                <a
+                  href="https://inventory-mangement-lyart.vercel.app/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-8 py-4 rounded-full font-bold hover:from-cyan-400 hover:to-blue-500 transition-all duration-500 shadow-2xl shadow-cyan-500/25 hover:shadow-cyan-500/50 transform hover:-translate-y-2 group-hover:scale-110 animate-glow-pulse"
+                >
+                  <ExternalLink size={20} className="animate-bounce-x" />
+                  <span>View Live Project</span>
+                  <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform duration-300" />
+                </a>
               </div>
-            ))}
-          </div>
+              
+              <div className="absolute top-6 right-6 flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-400 text-xs font-medium">LIVE</span>
+              </div>
+              
+              {/* Animated border */}
+              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                <div className="absolute inset-0 rounded-3xl border-2 border-transparent bg-gradient-to-r from-cyan-400 to-blue-500 animate-border-flow"></div>
+              </div>
+            </div>
 
-          <div className="text-center bg-white/10 backdrop-blur-md p-6 sm:p-8 rounded-2xl sm:rounded-3xl border border-white/20 animate-slide-up">
-            <Users className="text-[#F57C00] mx-auto mb-3 sm:mb-4" size={40} />
-            <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 sm:mb-3">Join Our Growing Team</h3>
-            <p className="text-gray-300 text-sm sm:text-base mb-4 sm:mb-6 max-w-2xl mx-auto">
-              We're always looking for talented professionals to join our mission of empowering businesses with innovative solutions.
-            </p>
-            <a
-              href={CAREER_FORM_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-[#F57C00] text-white px-6 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-base rounded-full font-semibold hover:bg-[#E65100] transition shadow-lg hover:scale-105 transform animate-glow"
-            >
-              <Mail size={20} />
-              Career Inquiries
-            </a>
+            {/* PandaNexus Platform */}
+            <div className="group relative bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl border border-white/20 rounded-3xl overflow-hidden hover:border-purple-500/50 transition-all duration-700 hover:scale-105 animate-on-scroll hover:shadow-2xl hover:shadow-purple-500/30">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700"></div>
+              <div className="relative z-10 p-10">
+                <div className="flex items-center gap-6 mb-8">
+                  <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:rotate-12 transition-all duration-500 shadow-xl shadow-purple-500/30">
+                    <Globe className="text-white animate-float-gentle" size={28} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-black text-white group-hover:text-purple-400 transition-colors duration-300">
+                      PandaNexus Platform
+                    </h3>
+                    <p className="text-gray-400 text-sm font-medium tracking-wider">Business Management Hub</p>
+                  </div>
+                </div>
+                
+                <p className="text-gray-400 mb-8 leading-relaxed text-lg group-hover:text-gray-300 transition-colors duration-300">
+                  A sophisticated business management platform featuring advanced analytics, workflow automation, and seamless integrations. Designed for scalability, performance, and user experience excellence.
+                </p>
+                
+                <div className="flex flex-wrap gap-3 mb-8">
+                  {['Next.js', 'TypeScript', 'PostgreSQL', 'Cloud Infrastructure'].map((tech, idx) => (
+                    <span key={idx} className="px-4 py-2 bg-purple-500/20 text-purple-400 rounded-full text-sm border border-purple-500/30 font-medium hover:bg-purple-500/30 hover:scale-105 transition-all duration-300 animate-fade-in-up" style={{animationDelay: `${idx * 0.1}s`}}>
+                      {tech}
+                    </span>
+                  ))}
+                </div>
+                
+                <a
+                  href="https://pandanexus.pandascanpros.in/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-3 bg-gradient-to-r from-purple-500 to-pink-600 text-white px-8 py-4 rounded-full font-bold hover:from-purple-400 hover:to-pink-500 transition-all duration-500 shadow-2xl shadow-purple-500/25 hover:shadow-purple-500/50 transform hover:-translate-y-2 group-hover:scale-110 animate-glow-pulse"
+                >
+                  <ExternalLink size={20} className="animate-bounce-x" />
+                  <span>View Live Project</span>
+                  <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform duration-300" />
+                </a>
+              </div>
+              
+              <div className="absolute top-6 right-6 flex items-center gap-2">
+                <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-green-400 text-xs font-medium">LIVE</span>
+              </div>
+              
+              {/* Animated border */}
+              <div className="absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                <div className="absolute inset-0 rounded-3xl border-2 border-transparent bg-gradient-to-r from-purple-400 to-pink-500 animate-border-flow"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Contact CTA Section */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 sm:px-6 lg:px-8 bg-white">
-        <div className="max-w-4xl mx-auto text-center animate-fade-in">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#1A2E46] mb-4 sm:mb-6">Ready to Transform Your Business?</h2>
-          <p className="text-gray-600 text-base sm:text-lg mb-6 sm:mb-8 max-w-2xl mx-auto">
-            Let's discuss how GENPANDAX can help you achieve your goals with our IT, Digital Marketing, and BPO solutions.
-          </p>
-          <a
-            href={CONNECT_FORM_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 sm:gap-3 bg-[#F57C00] text-white px-8 sm:px-10 py-4 sm:py-5 text-base sm:text-lg rounded-full font-bold hover:bg-[#E65100] transition shadow-xl hover:shadow-2xl transform hover:-translate-y-1 animate-glow"
-          >
-            <Mail size={24} />
-            Connect with Us
-            <ChevronRight size={24} />
-          </a>
+      <section className="relative py-32 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto text-center relative z-10 animate-on-scroll">
+          <div className="space-y-12">
+            <div className="inline-flex items-center gap-3 bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30 rounded-full px-6 py-3 text-sm text-cyan-400 mb-8 animate-float-gentle">
+              <Rocket size={18} className="animate-bounce" />
+              <span className="font-medium">Ready to Start?</span>
+            </div>
+            
+            <h2 className="text-5xl sm:text-6xl font-black leading-tight">
+              <span className="bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-slide-up">
+                Let's Build Something
+              </span>
+              <br />
+              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-gradient-x">
+                Extraordinary Together
+              </span>
+            </h2>
+            
+            <p className="text-xl text-gray-400 max-w-2xl mx-auto leading-relaxed animate-fade-in-up">
+              Transform your vision into reality with our cutting-edge web solutions and business management systems. The future starts now.
+            </p>
+            
+            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in-up">
+              <a
+                href={CONNECT_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative bg-gradient-to-r from-cyan-500 to-purple-600 text-white px-10 py-5 text-xl rounded-full font-bold hover:from-cyan-400 hover:to-purple-500 transition-all duration-500 shadow-2xl shadow-cyan-500/25 hover:shadow-cyan-500/50 transform hover:-translate-y-2 hover:scale-105 flex items-center gap-4 animate-glow-pulse"
+              >
+                <Mail size={24} className="animate-bounce-x" />
+                <span className="relative z-10">Start Your Project</span>
+                <ArrowRight size={24} className="group-hover:translate-x-2 transition-transform duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-purple-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-xl"></div>
+              </a>
+              
+              <a
+                href={CAREER_FORM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative bg-white/5 backdrop-blur-sm border-2 border-white/20 text-white px-10 py-5 text-xl rounded-full font-bold hover:bg-white/10 hover:border-cyan-400/50 transition-all duration-500 flex items-center gap-4 hover:scale-105 transform hover:-translate-y-1"
+              >
+                <span>Join Our Team</span>
+                <ChevronRight size={24} className="group-hover:translate-x-2 transition-transform duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/10 to-purple-500/10 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              </a>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#1A2E46] text-white py-8 sm:py-10 md:py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8 mb-6 sm:mb-8">
-            <div>
-              <div className="flex items-center space-x-3 mb-4">
-                <LogoComponent />
+      <footer className="relative border-t border-white/10 py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto relative z-10">
+          <div className="grid md:grid-cols-3 gap-12 mb-16">
+            <div className="space-y-8 animate-fade-in-up">
+              <div className="flex items-center space-x-4">
+                <FuturisticLogo />
                 <div>
-                  <div className="font-bold text-lg">GENPANDAX</div>
-                  <div className="text-[#F57C00] text-xs">Next-Gen Jobs, With GENPANDAX.</div>
+                  <div className="font-black text-2xl bg-gradient-to-r from-cyan-400 to-purple-600 bg-clip-text text-transparent">
+                    GENPANDAX
+                  </div>
+                  <div className="text-gray-400 text-xs font-medium tracking-wider">Next-Gen Solutions</div>
                 </div>
               </div>
-              <p className="text-gray-400 text-sm">
-                Empowering businesses with innovative IT, Digital Marketing, and BPO solutions.
+              
+              <p className="text-gray-400 leading-relaxed text-lg">
+                Building the future of web technology with innovative solutions that drive business growth and digital transformation across industries.
               </p>
-            </div>
-
-            <div>
-              <h4 className="font-bold text-lg mb-4">Quick Links</h4>
-              <div className="space-y-2">
-                <button onClick={() => scrollToSection('home')} className="block text-gray-400 hover:text-[#F57C00] transition">Home</button>
-                <button onClick={() => scrollToSection('about')} className="block text-gray-400 hover:text-[#F57C00] transition">About Us</button>
-                <button onClick={() => scrollToSection('services')} className="block text-gray-400 hover:text-[#F57C00] transition">Services</button>
-                <button onClick={() => scrollToSection('team')} className="block text-gray-400 hover:text-[#F57C00] transition">Our Team</button>
+              
+              <div className="flex gap-4">
+                {[
+                  { href: LINKEDIN_URL, icon: Linkedin, color: 'cyan' },
+                  { href: INSTAGRAM_URL, icon: Instagram, color: 'purple' },
+                  { href: `mailto:${EMAIL}`, icon: Mail, color: 'blue' }
+                ].map((social, idx) => (
+                  <a key={idx} href={social.href} target="_blank" rel="noopener noreferrer" className={`w-14 h-14 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full flex items-center justify-center hover:bg-${social.color}-500/20 hover:border-${social.color}-500/30 transition-all duration-300 transform hover:scale-125 hover:-translate-y-1 animate-fade-in-up`} style={{animationDelay: `${idx * 0.1}s`}}>
+                    <social.icon size={24} className={`text-gray-400 hover:text-${social.color}-400 transition-colors duration-300`} />
+                  </a>
+                ))}
               </div>
             </div>
 
-            <div>
-              <h4 className="font-bold text-lg mb-4">Connect With Us</h4>
-              <p className="text-gray-400 text-sm mb-4">
-                Email: <a href={`mailto:${EMAIL}`} className="text-[#F57C00] hover:underline">{EMAIL}</a>
-              </p>
-              <div className="flex gap-4">
-                <a href={LINKEDIN_URL} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F57C00] transition transform hover:scale-110 hover:rotate-12">
-                  <Linkedin size={20} />
-                </a>
-                <a href={INSTAGRAM_URL} target="_blank" rel="noopener noreferrer" className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F57C00] transition transform hover:scale-110 hover:rotate-12">
-                  <Instagram size={20} />
-                </a>
-                <a href={`mailto:${EMAIL}`} className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-[#F57C00] transition transform hover:scale-110 hover:rotate-12">
-                  <Mail size={20} />
-                </a>
+            <div className="space-y-8 animate-fade-in-up" style={{animationDelay: '0.2s'}}>
+              <h4 className="font-black text-xl text-white">Quick Links</h4>
+              <div className="space-y-4">
+                {['Home', 'About', 'Services', 'Projects'].map((item, idx) => (
+                  <button key={item} onClick={() => scrollToSection(item.toLowerCase())} className="block text-gray-400 hover:text-cyan-400 transition-all duration-300 hover:translate-x-2 font-medium animate-fade-in-up" style={{animationDelay: `${idx * 0.1}s`}}>
+                    {item}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-8 animate-fade-in-up" style={{animationDelay: '0.4s'}}>
+              <h4 className="font-black text-xl text-white">Get In Touch</h4>
+              <div className="space-y-4">
+                <p className="text-gray-400 leading-relaxed">
+                  Email: <a href={`mailto:${EMAIL}`} className="text-cyan-400 hover:text-cyan-300 transition-colors duration-300 font-medium">{EMAIL}</a>
+                </p>
+                <p className="text-gray-400 leading-relaxed">
+                  Ready to transform your business? Let's discuss your project and create something amazing together that will revolutionize your industry.
+                </p>
               </div>
             </div>
           </div>
 
-          <div className="border-t border-white/10 pt-8 text-center text-gray-400 text-sm">
-            <p>&copy; 2025 GENPANDAX Consulting. All rights reserved.</p>
+          <div className="border-t border-white/10 pt-10 text-center animate-fade-in-up">
+            <p className="text-gray-400 text-lg">
+              &copy; 2025 GENPANDAX. All rights reserved. Built with passion for innovation and excellence.
+            </p>
           </div>
         </div>
       </footer>
